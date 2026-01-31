@@ -1,65 +1,98 @@
-import Image from "next/image";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import Navbar from "@/components/navbar";
+import { UtensilsCrossed, Clock, Truck, Star } from "lucide-react";
 
-export default function Home() {
+export default function HomePage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="flex min-h-screen flex-col">
+      <Navbar />
+
+      {/* Hero Section */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+        <div className="container mx-auto px-4 py-20 md:py-32">
+          <div className="grid items-center gap-12 md:grid-cols-2">
+            <div className="space-y-6">
+              <h1 className="text-balance text-4xl font-bold tracking-tight text-foreground md:text-5xl lg:text-6xl">
+                Delicious Food,{" "}
+                <span className="text-primary">Delivered Fast</span>
+              </h1>
+              <p className="max-w-md text-pretty text-lg text-muted-foreground">
+                Order from our curated menu of mouthwatering dishes prepared by
+                expert chefs. Fresh ingredients, exceptional taste, delivered to
+                your door.
+              </p>
+              <div className="flex flex-col gap-4 sm:flex-row">
+                <Link href="/menu">
+                  <Button size="lg" className="w-full sm:w-auto">
+                    View Menu
+                  </Button>
+                </Link>
+                <Link href="/signup">
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="w-full sm:w-auto bg-transparent"
+                  >
+                    Create Account
+                  </Button>
+                </Link>
+              </div>
+            </div>
+            <div className="relative">
+              <div className="relative mx-auto aspect-square max-w-md overflow-hidden rounded-full bg-secondary/20 p-8">
+                <img
+                  src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&h=600&fit=crop"
+                  alt="Delicious food spread"
+                  className="h-full w-full rounded-full object-cover"
+                />
+              </div>
+              <div className="absolute top-4 right-4 rounded-lg bg-card p-3 shadow-lg">
+                <div className="flex items-center gap-2">
+                  <Star className="h-5 w-5 fill-secondary text-secondary" />
+                  <span className="font-semibold">4.9</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      {/* Features Section */}
+      <section className="border-y bg-muted/50 py-16">
+        <div className="container mx-auto px-4">
+          <div className="grid gap-8 md:grid-cols-3">
+            <div className="flex flex-col items-center gap-4 text-center">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+                <UtensilsCrossed className="h-7 w-7 text-primary" />
+              </div>
+              <h3 className="text-xl font-semibold">Quality Ingredients</h3>
+              <p className="text-muted-foreground">
+                We use only the freshest, locally-sourced ingredients in all our
+                dishes.
+              </p>
+            </div>
+            <div className="flex flex-col items-center gap-4 text-center">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+                <Clock className="h-7 w-7 text-primary" />
+              </div>
+              <h3 className="text-xl font-semibold">Quick Preparation</h3>
+              <p className="text-muted-foreground">
+                Your order is prepared fresh and ready within 20-30 minutes.
+              </p>
+            </div>
+            <div className="flex flex-col items-center gap-4 text-center">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+                <Truck className="h-7 w-7 text-primary" />
+              </div>
+              <h3 className="text-xl font-semibold">Fast Delivery</h3>
+              <p className="text-muted-foreground">
+                Hot and fresh delivery right to your doorstep in under an hour.
+              </p>
+            </div>
+          </div>
         </div>
-      </main>
+      </section>
     </div>
   );
 }
