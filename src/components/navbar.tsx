@@ -114,28 +114,31 @@ export default function Navbar() {
           >
             Menu
           </Link>
-          {
-            user?.role === "admin" && (
-              <Link
-            href="/admin"
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-          >
-            Admin
-          </Link>
-            )
-          }
+          {user?.role === "admin" && (
+            <Link
+              href="/admin"
+              className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+            >
+              Admin
+            </Link>
+          )}
         </nav>
 
         {/* Desktop Actions */}
         <div className="hidden items-center gap-4 md:flex">
-          <ModeToggle/>
+          <ModeToggle />
           <Link href="/cart" className="relative">
-            {(isAuthenticated && user ) && <Button variant="ghost" size="icon">
-              <ShoppingCart className="h-5 w-5" />
-              <span className="sr-only">Cart</span>
-            </Button>}
+            {isAuthenticated && user && (
+              <Button variant="ghost" size="icon">
+                <ShoppingCart className="h-5 w-5" />
+                <span className="sr-only">Cart</span>
+              </Button>
+            )}
             {totalItems > 0 && (
-              <Badge variant={"destructive"} className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full !bg-primary p-0 text-xs text-secondary-foreground">
+              <Badge
+                variant={"destructive"}
+                className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full !bg-primary p-0 text-xs text-secondary-foreground"
+              >
                 {totalItems}
               </Badge>
             )}
@@ -181,7 +184,7 @@ export default function Navbar() {
 
         {/* Mobile Menu */}
         <div className="flex items-center gap-2 md:hidden">
-                    <ModeToggle/>
+          <ModeToggle />
           <Link href="/cart" className="relative">
             <Button variant="ghost" size="icon">
               <ShoppingCart className="h-5 w-5" />
@@ -215,6 +218,14 @@ export default function Navbar() {
                 >
                   Menu
                 </Link>
+                {user?.role === "admin" && (
+                  <Link
+                    href="/admin"
+                    className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+                  >
+                    Admin
+                  </Link>
+                )}
                 <Link
                   href="/cart"
                   className="text-lg font-medium"
