@@ -4,6 +4,8 @@ import "./globals.css";
 import StoreProvider from "@/providers/StoreProvider";
 import QueryProvider from "@/providers/queryProvider";
 import { Toaster } from "sonner";
+import NextTopLoader from "nextjs-toploader";
+import ThemeProviders from "@/providers/ThemeProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,8 +34,16 @@ export default function RootLayout({
       >
         <QueryProvider>
           <StoreProvider>
-            {children}
-            <Toaster/>
+            <ThemeProviders>
+              <NextTopLoader
+                color="#ff6900"
+                easing="ease"
+                speed={400}
+                showSpinner={false}
+              />
+              {children}
+              <Toaster />
+            </ThemeProviders>
           </StoreProvider>
         </QueryProvider>
       </body>

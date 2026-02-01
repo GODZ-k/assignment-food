@@ -296,7 +296,7 @@ return {
     await resend.emails.send({
       from: "Acme <onboarding@resend.dev>",
       to: data.email,
-      subject: "Verify Your Email - FoodieHub",
+      subject: "Verify Your Email - YellowChilli",
       html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2>Your Verification Code</h2>

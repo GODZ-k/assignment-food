@@ -25,6 +25,8 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { getUserInfo, logoutAction } from "@/actions/auth";
 import { toast } from "sonner";
 import { Spinner } from "./ui/spinner";
+import { BarLoader } from "react-spinners";
+import { ModeToggle } from "./ThemeToggle";
 
 export default function Navbar() {
   const router = useRouter();
@@ -42,12 +44,12 @@ export default function Navbar() {
   });
 
   const logoutMutation = useMutation({
-    mutationFn: async function(){
-      const res = await logoutAction()
-      if(!res.success){
-        throw Error("Something went wrong")
+    mutationFn: async function () {
+      const res = await logoutAction();
+      if (!res.success) {
+        throw Error("Something went wrong");
       }
-      return res
+      return res;
     },
     onSuccess: () => {
       toast.success("User loggedout successfully.");
@@ -67,37 +69,28 @@ export default function Navbar() {
 
   if (isPending) {
     return (
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4">
-          {/* Logo */}
-          <div className="flex items-center gap-2">
-            <div className="h-6 w-6 animate-pulse bg-muted rounded" />
-            <div className="h-6 w-20 animate-pulse bg-muted rounded" />
-          </div>
-
-          {/* Placeholder buttons */}
-          <div className="flex items-center gap-2">
-            <div className="h-10 w-20 animate-pulse bg-muted rounded-md" />
-            <div className="h-10 w-20 animate-pulse bg-muted rounded-md" />
-          </div>
-        </div>
-      </header>
+      <div className=" fixed flex justify-center z-40 top-0 right-0 w-full">
+        <BarLoader color="#ff6900" width={"100%"} />
+      </div>
     );
   }
 
   if (error) {
-    return <div>Something went wrong
-       <Button onClick={handleLogout}>
-                  {logoutMutation.isPending ? (
-                    <Spinner />
-                  ) : (
-                    <>
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Logout
-                    </>
-                  )}
-                </Button>
-    </div>;
+    return (
+      <div>
+        Something went wrong
+        <Button onClick={handleLogout}>
+          {logoutMutation.isPending ? (
+            <Spinner />
+          ) : (
+            <>
+              <LogOut className="mr-2 h-4 w-4" />
+              Logout
+            </>
+          )}
+        </Button>
+      </div>
+    );
   }
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -125,6 +118,7 @@ export default function Navbar() {
 
         {/* Desktop Actions */}
         <div className="hidden items-center gap-4 md:flex">
+          <ModeToggle/>
           <Link href="/cart" className="relative">
             <Button variant="ghost" size="icon">
               <ShoppingCart className="h-5 w-5" />
@@ -177,6 +171,7 @@ export default function Navbar() {
 
         {/* Mobile Menu */}
         <div className="flex items-center gap-2 md:hidden">
+                    <ModeToggle/>
           <Link href="/cart" className="relative">
             <Button variant="ghost" size="icon">
               <ShoppingCart className="h-5 w-5" />

@@ -158,7 +158,7 @@ export default function LoginPage() {
         <CardTitle className="text-2xl font-bold text-primary">
           Welcome Back
         </CardTitle>
-        <CardDescription>Sign in to your FoodieHub account</CardDescription>
+        <CardDescription>Sign in to your YellowChilli account</CardDescription>
       </CardHeader>
 
       <CardContent>
