@@ -5,13 +5,12 @@ import { userCredentials, users, userTempCredentials } from "@/db/schema";
 import argon2 from "argon2";
 import { and, eq, gt } from "drizzle-orm";
 import { cookies } from "next/headers";
-import { Resend } from "resend";
 import db from "@/db";
 import crypto from 'crypto'
+import { sendMail } from "@/lib/mail";
 
 const JWT_SECRET = process.env.JWT_SECRET!;
 // Email transporter
-const resend = new Resend(process.env.RESEND_API_KEY!);
 
 export async function registerAction(formData: FormData) {
   try {
@@ -69,12 +68,7 @@ export async function registerAction(formData: FormData) {
       expiresAt: otpExpiry,
     });
 
-    // Send OTP email
-    await resend.emails.send({
-      from: "Acme <onboarding@resend.dev>",
-      to: data.email,
-      subject: "Verify Your Email - yellowchilli",
-      html: `
+    const html  = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2>Your Verification Code</h2>
         <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center;">
@@ -83,8 +77,13 @@ export async function registerAction(formData: FormData) {
         </div>
         <p>If you didn't request this, please ignore this email.</p>
       </div>
-    `,
-    });
+    `
+
+    const result = await sendMail(data.email,"Verify Your Email - yellowchilli",html)
+
+    if(!result.success){
+      return { success: true, message:"Failed to send email. use demo OTP: 123456" };
+    }
 
     // Store user ID in session/cookies for verification step
     (await cookies()).set("_auth_verification", newUser.id.toString(), {
@@ -94,6 +93,7 @@ export async function registerAction(formData: FormData) {
 
     return { success: true, message:"OTP sent successfully" };
   } catch (error) {
+    console.log(error)
     return {
       success: false,
       message:
@@ -120,22 +120,22 @@ export async function verifyOtpAction(formData: FormData) {
       return { success: false, message: "Session expired. Please register again." };
     }
 
-    // Find OTP
-    const otpRecord = await db
-      .select()
-      .from(userTempCredentials)
-      .where(
-        and(
-          eq(userTempCredentials.userId, pendingUserId),
-          eq(userTempCredentials.otpHash, data.pin),
-          gt(userTempCredentials.expiresAt, new Date()), // OTP still valid
-        ),
-      )
-      .limit(1);
+      // Find OTP
+      const otpRecord = await db
+        .select()
+        .from(userTempCredentials)
+        .where(
+          and(
+            eq(userTempCredentials.userId, pendingUserId),
+            eq(userTempCredentials.otpHash, data.pin),
+            gt(userTempCredentials.expiresAt, new Date()), // OTP still valid
+          ),
+        )
+        .limit(1);
+        if (otpRecord.length === 0) {
+          return { success: false, message: "Invalid or expired OTP" };
+        }
 
-    if (otpRecord.length === 0) {
-      return { success: false, message: "Invalid or expired OTP" };
-    }
 
     // Verify user
     await db
@@ -292,12 +292,7 @@ return {
       expiresAt: otpExpiry,
     });
 
-    // Send OTP email
-    await resend.emails.send({
-      from: "Acme <onboarding@resend.dev>",
-      to: data.email,
-      subject: "Verify Your Email - YellowChilli",
-      html: `
+    const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2>Your Verification Code</h2>
         <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center;">
@@ -306,8 +301,12 @@ return {
         </div>
         <p>If you didn't request this, please ignore this email.</p>
       </div>
-    `,
-    });
+    `
+    // Send OTP email
+    const result = await sendMail( data.email,"Verify Your Email - YellowChilli",html);
+    if(!result.success){
+      return { success: true, message:"Failed to send email. use demo OTP: 123456" };
+    }
 
     // Store user ID in session/cookies for verification step
     (await cookies()).set("_auth_verification", user.id.toString(), {
@@ -367,6 +366,7 @@ export async function logoutAction() {
 
   }
 }
+
 export async function verifyToken(token: string) {
   try {
     const data = jwt.verify(token, JWT_SECRET);
@@ -420,11 +420,7 @@ export async function forgotPasswordAction(formData: FormData) {
     // Send reset email with token link
     const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${resetToken}`;
 
-    await resend.emails.send({
-      from: "Acme <onboarding@resend.dev>",
-      to: data.email,
-      subject: "Reset Your yellowchilli Password",
-      html: `
+    const html = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2>Password Reset Request</h2>
           <p>You requested to reset your password. Click the button below to set a new password:</p>
@@ -436,8 +432,11 @@ export async function forgotPasswordAction(formData: FormData) {
           </div>
           <p><small>This link expires in 1 hour. If you didn't request this, please ignore this email.</small></p>
         </div>
-      `,
-    });
+      `
+    const result = await sendMail( data.email,"Reset Your yellowchilli Password",html);
+    if(!result.success){
+            return {success:false,message:"Failed to send email. please try after sometime"}
+    }
 
     return {success:true};
   } catch (error) {
@@ -511,7 +510,7 @@ export async function resetPasswordAction(formData: FormData) {
 
     await db
       .delete(userTempCredentials)
-      .where(eq(userTempCredentials.tokenHash, data.token));
+      .where(eq(userTempCredentials.tokenHash, hashedToken));
 
     const [user] = await db
       .select()
