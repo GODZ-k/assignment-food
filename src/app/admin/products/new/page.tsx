@@ -105,7 +105,6 @@ export default function NewProductPage() {
     productMutation.mutate(newProduct,{
       onSuccess:()=>{
         toast.success("Product added successfully")
-        router.push("/admin/products");
       },
       onError:(error)=>{
         toast.error(error.message)
