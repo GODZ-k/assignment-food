@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Card,
@@ -83,15 +82,33 @@ export default function LoginPage() {
 
   // Mutations
   const emailLoginMutation = useMutation({
-    mutationFn: loginAction,
+    mutationFn: async function(formData:FormData){
+      const res = await loginAction(formData)
+      if(!res.success){
+        throw Error(res.message)
+      }
+      return res
+    }
   });
 
   const sendOtpMutation = useMutation({
-    mutationFn: loginWithOtp,
+    mutationFn: async function(formData:FormData){
+      const res = await loginWithOtp(formData)
+      if(!res.success){
+        throw Error(res.message)
+      }
+      return res
+    }
   });
 
   const verifyOtpMutation = useMutation({
-    mutationFn: verifyOtpAction,
+    mutationFn: async function(formData:FormData){
+      const res = await verifyOtpAction(formData)
+      if(!res.success){
+        throw Error(res.message)
+      }
+      return res
+    }
   });
 
   const handleEmailLogin = (data: z.infer<typeof emailLoginSchema>) => {

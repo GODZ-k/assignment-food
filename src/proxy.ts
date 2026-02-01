@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import jwt from "jsonwebtoken";
 import { verifyToken } from "./actions/auth";
 
 const protectedRoutes = ["/", "/menu", "/cart"];

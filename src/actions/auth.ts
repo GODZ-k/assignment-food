@@ -3,10 +3,11 @@ import { z } from "zod";
 import jwt from "jsonwebtoken";
 import { userCredentials, users, userTempCredentials } from "@/db/schema";
 import argon2 from "argon2";
-import { and, eq, gt, lt } from "drizzle-orm";
+import { and, eq, gt } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { Resend } from "resend";
 import db from "@/db";
+import crypto from 'crypto'
 
 const JWT_SECRET = process.env.JWT_SECRET!;
 // Email transporter
@@ -36,7 +37,7 @@ export async function registerAction(formData: FormData) {
       .limit(1);
 
     if (existingUser.length > 0) {
-      throw new Error("User Already exists");
+      return { success: false, message: "User already exists" };
     }
 
     // Hash password
@@ -91,13 +92,15 @@ export async function registerAction(formData: FormData) {
       maxAge: 10 * 60, // 10 minutes
     });
 
-    return true;
+    return { success: true, message:"OTP sent successfully" };
   } catch (error) {
-    throw new Error(
-      error instanceof Error
-        ? error.message
-        : "An error occurred during OTP verification",
-    );
+    return {
+      success: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : "Registration failed. Try again.",
+    };
   }
 }
 
@@ -114,7 +117,7 @@ export async function verifyOtpAction(formData: FormData) {
     const pendingUserId = (await cookies()).get("_auth_verification")?.value;
 
     if (!pendingUserId) {
-      throw new Error("Session expired. Please register again.");
+      return { success: false, message: "Session expired. Please register again." };
     }
 
     // Find OTP
@@ -131,7 +134,7 @@ export async function verifyOtpAction(formData: FormData) {
       .limit(1);
 
     if (otpRecord.length === 0) {
-      throw new Error("Invalid or expired OTP");
+      return { success: false, message: "Invalid or expired OTP" };
     }
 
     // Verify user
@@ -151,6 +154,10 @@ export async function verifyOtpAction(formData: FormData) {
       .from(users)
       .where(eq(users.id, pendingUserId))
       .limit(1);
+
+      if (!JWT_SECRET) {
+      return { success: false, message: "Server configuration error" };
+    }
 
     const token = jwt.sign(
       {
@@ -173,13 +180,15 @@ export async function verifyOtpAction(formData: FormData) {
     // Clear pending verification
     (await cookies()).delete("_auth_verification");
 
-    return true;
+    return { success: true };
   } catch (error) {
-    throw new Error(
-      error instanceof Error
-        ? error.message
-        : "An error occurred during OTP verification",
-    );
+      return {
+      success: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : "OTP verification failed",
+    };
   }
 }
 
@@ -201,22 +210,28 @@ export async function loginAction(formData: FormData) {
       .where(eq(users.email, data.email));
 
     if (!user || !user.isActive || !user.emailVerified) {
-      throw new Error("Don't have an account or account not verified");
-    }
+ return {
+        success: false,
+        message: "Account not found or not verified",
+      };    }
 
     const [password] = await db
       .select()
       .from(userCredentials)
       .where(eq(userCredentials.userId, user.id));
+
     const isPasswordCorrect = await argon2.verify(
       password.passwordHash,
       data.password,
     );
 
     if (!isPasswordCorrect) {
-      throw new Error("Invalid password");
+      return { success: false, message: "Invalid password" };
     }
 
+     if (!JWT_SECRET) {
+      return { success: false, message: "Server configuration error" };
+    }
     const token = jwt.sign(
       {
         userId: user.id,
@@ -228,9 +243,6 @@ export async function loginAction(formData: FormData) {
       { expiresIn: "7d" },
     );
 
-    if (!token) {
-      throw new Error("Failed to create token");
-    }
 
     (await cookies()).set("_auth_token", token, {
       httpOnly: true,
@@ -238,13 +250,13 @@ export async function loginAction(formData: FormData) {
       maxAge: 7 * 24 * 60 * 60,
     });
 
-    return true;
+    return { success: true };
   } catch (error) {
-    throw new Error(
-      error instanceof Error
-        ? error.message
-        : "An error occurred during OTP verification",
-    );
+    return {
+      success: false,
+      message:
+        error instanceof Error ? error.message : "Login failed",
+    };
   }
 }
 
@@ -264,8 +276,10 @@ export async function loginWithOtp(formData: FormData) {
       .where(eq(users.email, data.email));
 
     if (!user || !user.emailVerified || !user.isActive) {
-      throw new Error("User not found or email and account not verified");
-    }
+return {
+        success: false,
+        message: "User not found or account not verified",
+      };    }
 
     // Generate OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -301,13 +315,15 @@ export async function loginWithOtp(formData: FormData) {
       maxAge: 10 * 60, // 10 minutes
     });
 
-    return true;
+    return { success: true };
   } catch (error) {
-    throw new Error(
-      error instanceof Error
-        ? error.message
-        : "An error occurred during OTP verification",
-    );
+    return {
+      success: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : "Failed to send OTP",
+    };
   }
 }
 
@@ -318,26 +334,24 @@ export async function getUserInfo() {
     const data = await verifyToken(token as string);
 
     if (!data) {
-      throw new Error("User not authentiocated");
+      return { isAuthn: false, user: null };
     }
 
     const tokenData = data as { userId: string };
+
     const [user] = await db
       .select()
       .from(users)
       .where(eq(users.id, tokenData.userId));
 
     if (!user || !user.isActive) {
-      throw new Error("User not authentiocated");
+      return { isAuthn: false, user: null };
     }
 
-    return { isAuthn: !!user, user };
+    return { isAuthn: true, user };
   } catch (error) {
-    throw new Error(
-      error instanceof Error
-        ? error.message
-        : "An error occurred during OTP verification",
-    );
+    return { isAuthn: false, user: null };
+
   }
 }
 
@@ -347,13 +361,10 @@ export async function logoutAction() {
     const cookieStore = await cookies();
     cookieStore.delete("_auth_token");
     cookieStore.delete("_auth_verification");
-    return true;
+    return { success: true };
   } catch (error) {
-    throw new Error(
-      error instanceof Error
-        ? error.message
-        : "An error occurred during OTP verification",
-    );
+    return { success: false };
+
   }
 }
 export async function verifyToken(token: string) {
@@ -381,7 +392,7 @@ export async function forgotPasswordAction(formData: FormData) {
       .where(eq(users.email, data.email));
 
     if (!user || !user.emailVerified || !user.isActive) {
-      throw new Error("No verified account found with this email");
+      return {success:false,message:"No verified account found with this email"}
     }
 
     const resetToken = jwt.sign(
@@ -394,10 +405,15 @@ export async function forgotPasswordAction(formData: FormData) {
       { expiresIn: "1h" }
     );
 
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
+
     const resetExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
     await db.insert(userTempCredentials).values({
       userId: user.id,
-      tokenHash: resetToken,
+      tokenHash: hashedToken,
       expiresAt: resetExpiry,
     });
 
@@ -423,13 +439,15 @@ export async function forgotPasswordAction(formData: FormData) {
       `,
     });
 
-    return true;
+    return {success:true};
   } catch (error) {
-    throw new Error(
-      error instanceof Error
-        ? error.message
-        : "An error occurred during password reset request"
-    );
+     return {
+      success: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : "Failed to send OTP",
+    };
   }
 }
 
@@ -445,16 +463,29 @@ export async function resetPasswordAction(formData: FormData) {
       token: formData.get("token"),
     });
 
-    // Verify reset token
-    const payload = jwt.verify(data.token, JWT_SECRET) as {
+     if (!JWT_SECRET) {
+      return { success: false, message: "Server error" };
+    }
+
+    let payload: { userId: string; purpose: string };
+    try {
+      payload = jwt.verify(data.token, JWT_SECRET) as  {
       userId: string;
-      email: string;
       purpose: string;
     };
-
-    if (payload.purpose !== "password_reset") {
-      throw new Error("Invalid reset token");
+    } catch {
+      return { success: false, message: "Invalid or expired token" };
     }
+
+    // Verify reset token
+    if (payload.purpose !== "password_reset") {
+      return { success: false, message: "Invalid reset token" };
+    }
+
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(data.token)
+      .digest("hex");
 
     const tokenRecord = await db
       .select()
@@ -462,14 +493,14 @@ export async function resetPasswordAction(formData: FormData) {
       .where(
         and(
           eq(userTempCredentials.userId, payload.userId),
-          eq(userTempCredentials.tokenHash, data.token),
+          eq(userTempCredentials.tokenHash, hashedToken),
           gt(userTempCredentials.expiresAt, new Date())
         )
       )
       .limit(1);
 
     if (tokenRecord.length === 0) {
-      throw new Error("Reset token expired or invalid");
+      return { success: false, message: "Reset token expired or used" };
     }
 
     const hashedPassword = await argon2.hash(data.password);
@@ -505,12 +536,8 @@ export async function resetPasswordAction(formData: FormData) {
       maxAge: 7 * 24 * 60 * 60,
     });
 
-    return true;
+    return { success: true };
   } catch (error) {
-    throw new Error(
-      error instanceof Error
-        ? error.message
-        : "Password reset failed"
-    );
+        return { success: false, message: "Password reset failed" };
   }
 }

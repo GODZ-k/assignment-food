@@ -59,7 +59,13 @@ export default function ResetPasswordPage() {
   });
 
   const resetMutation = useMutation({
-    mutationFn: resetPasswordAction,
+    mutationFn: async function(formData:FormData){
+      const res = await resetPasswordAction(formData)
+      if(!res.success){
+        throw Error(res.message)
+      }
+      return res
+    },
   });
 
   const handleSubmit = (data: ResetPasswordData) => {

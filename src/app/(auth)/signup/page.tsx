@@ -1,5 +1,5 @@
 "use client";
-import { useActionState, useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -34,7 +34,6 @@ import { Spinner } from "@/components/ui/spinner";
 import { useMutation } from "@tanstack/react-query";
 import { registerAction, verifyOtpAction } from "@/actions/auth";
 import { toast } from "sonner";
-// import { toast } from "sonner";
 
 const registerFormSchema = z
   .object({
@@ -74,7 +73,6 @@ const verificationFormSchema = z.object({
 
 type RegisterFormData = z.infer<typeof registerFormSchema>;
 type VerificationFormData = z.infer<typeof verificationFormSchema>;
-// type ActionResult = { success?: boolean; message?: string; error?: string };
 
 export default function SignupPage() {
   const router = useRouter();
@@ -96,11 +94,23 @@ export default function SignupPage() {
   },
   });
   const registerMutation = useMutation({
-    mutationFn:registerAction
+    mutationFn: async function(formData:FormData){
+      const res = await registerAction(formData)
+      if(!res.success){
+        throw new Error(res.message)
+      }
+      return res
+    }
   })
 
   const verifyMutation = useMutation({
-    mutationFn:verifyOtpAction
+    mutationFn:async function(formData:FormData){
+      const res = await verifyOtpAction(formData)
+      if(!res.success){
+        throw new Error(res.message)
+      }
+      return res
+    }
   })
 
   const handleRegisterSubmit = (data: RegisterFormData) => {

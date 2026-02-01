@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useAppSelector, useAppDispatch } from "@/lib/hooks";
+import { useAppSelector } from "@/lib/hooks";
 import {
   ShoppingCart,
   User,
@@ -42,7 +42,13 @@ export default function Navbar() {
   });
 
   const logoutMutation = useMutation({
-    mutationFn: logoutAction,
+    mutationFn: async function(){
+      const res = await logoutAction()
+      if(!res.success){
+        throw Error("Something went wrong")
+      }
+      return res
+    },
     onSuccess: () => {
       toast.success("User loggedout successfully.");
       router.replace("/login");
@@ -80,14 +86,25 @@ export default function Navbar() {
   }
 
   if (error) {
-    return <div>Something went wrong</div>;
+    return <div>Something went wrong
+       <Button onClick={handleLogout}>
+                  {logoutMutation.isPending ? (
+                    <Spinner />
+                  ) : (
+                    <>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Logout
+                    </>
+                  )}
+                </Button>
+    </div>;
   }
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2">
           <UtensilsCrossed className="h-6 w-6 text-primary" />
-          <span className="text-xl font-bold text-primary">FoodieHub</span>
+          <span className="text-xl font-bold text-primary">YellowChilli</span>
         </Link>
 
         {/* Desktop Navigation */}

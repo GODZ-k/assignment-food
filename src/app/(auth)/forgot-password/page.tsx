@@ -46,7 +46,14 @@ export default function ForgotPasswordPage() {
   });
 
   const forgotMutation = useMutation({
-    mutationFn: forgotPasswordAction,
+    mutationFn: async function(formData:FormData){
+      const res = await forgotPasswordAction(formData)
+
+      if(!res.success){
+        throw Error(res.message)
+      }
+      return res
+    },
   });
 
   const handleSubmit = (data: ForgotPasswordData) => {
