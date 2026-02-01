@@ -165,6 +165,7 @@ export async function verifyOtpAction(formData: FormData) {
         email: user.email,
         name: user.name,
         isActive: user.isActive,
+        role:user.role
       },
       JWT_SECRET,
       { expiresIn: "7d" },
@@ -238,6 +239,7 @@ export async function loginAction(formData: FormData) {
         email: user.email,
         name: user.name,
         isActive: user.isActive,
+        role:user.role
       },
       JWT_SECRET,
       { expiresIn: "7d" },
@@ -523,6 +525,7 @@ export async function resetPasswordAction(formData: FormData) {
         email: user.email,
         name: user.name,
         isActive: user.isActive,
+        role:user.role
       },
       JWT_SECRET,
       { expiresIn: "7d" }

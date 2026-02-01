@@ -5,21 +5,35 @@ import Navbar from "@/components/navbar";
 import MenuItemCard from "@/components/menu-item-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { menuItems, categories } from "@/lib/data/menu";
 import { Search } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { getProductsAction } from "@/actions/product";
+import { getCategoriesAction } from "@/actions/category";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function MenuPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-
-  const filteredItems = menuItems.filter((item) => {
-    const matchesSearch =
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory =
-      !selectedCategory || item.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+  const { data: menuItems, isLoading } = useQuery({
+    queryKey: ["products"],
+    queryFn: getProductsAction,
+    retry: false,
   });
+  const { data: categories } = useQuery({
+    queryKey: ["category"],
+    queryFn: getCategoriesAction,
+    retry: false,
+  });
+
+  const filteredItems =
+    menuItems?.filter((item) => {
+      const matchesSearch =
+        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.description.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory =
+        !selectedCategory || item.category === selectedCategory;
+      return matchesSearch && matchesCategory;
+    }) || [];
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -29,7 +43,9 @@ export default function MenuPage() {
         {/* Header */}
         <div className="border-b bg-background py-8">
           <div className="container mx-auto px-4">
-            <h1 className="mb-4 text-3xl font-bold text-foreground">Our Menu</h1>
+            <h1 className="mb-4 text-3xl font-bold text-foreground">
+              Our Menu
+            </h1>
             <p className="mb-6 text-muted-foreground">
               Explore our delicious selection of dishes
             </p>
@@ -60,15 +76,17 @@ export default function MenuPage() {
               >
                 All
               </Button>
-              {categories.map((category) => (
+              {categories?.map((category) => (
                 <Button
-                  key={category}
-                  variant={selectedCategory === category ? "default" : "outline"}
+                  key={category.id}
+                  variant={
+                    selectedCategory === category.name ? "default" : "outline"
+                  }
                   size="sm"
-                  onClick={() => setSelectedCategory(category)}
+                  onClick={() => setSelectedCategory(category.name)}
                   className="shrink-0"
                 >
-                  {category}
+                  {category.name}
                 </Button>
               ))}
             </div>
@@ -77,27 +95,35 @@ export default function MenuPage() {
 
         {/* Menu Grid */}
         <div className="container mx-auto px-4 py-8">
-          {filteredItems.length > 0 ? (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {filteredItems.map((item) => (
-                <MenuItemCard key={item.id} item={item} />
-              ))}
+          {isLoading ? (
+            <div className=" p-3">
+              <Spinner />
             </div>
           ) : (
-            <div className="py-16 text-center">
-              <p className="text-lg text-muted-foreground">
-                No dishes found matching your search.
-              </p>
-              <Button
-                variant="link"
-                onClick={() => {
-                  setSearchQuery("");
-                  setSelectedCategory(null);
-                }}
-              >
-                Clear filters
-              </Button>
-            </div>
+            <>
+              {filteredItems?.length > 0 ? (
+                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {filteredItems?.map((item) => (
+                    <MenuItemCard key={item.id} item={item} />
+                  ))}
+                </div>
+              ) : (
+                <div className="py-16 text-center">
+                  <p className="text-lg text-muted-foreground">
+                    No dishes found matching your search.
+                  </p>
+                  <Button
+                    variant="link"
+                    onClick={() => {
+                      setSearchQuery("");
+                      setSelectedCategory(null);
+                    }}
+                  >
+                    Clear filters
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </main>

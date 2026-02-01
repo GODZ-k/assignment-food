@@ -114,18 +114,28 @@ export default function Navbar() {
           >
             Menu
           </Link>
+          {
+            user?.role === "admin" && (
+              <Link
+            href="/admin"
+            className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+          >
+            Admin
+          </Link>
+            )
+          }
         </nav>
 
         {/* Desktop Actions */}
         <div className="hidden items-center gap-4 md:flex">
           <ModeToggle/>
           <Link href="/cart" className="relative">
-            <Button variant="ghost" size="icon">
+            {(isAuthenticated && user ) && <Button variant="ghost" size="icon">
               <ShoppingCart className="h-5 w-5" />
               <span className="sr-only">Cart</span>
-            </Button>
+            </Button>}
             {totalItems > 0 && (
-              <Badge className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-secondary p-0 text-xs text-secondary-foreground">
+              <Badge variant={"destructive"} className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full !bg-primary p-0 text-xs text-secondary-foreground">
                 {totalItems}
               </Badge>
             )}
@@ -160,11 +170,11 @@ export default function Navbar() {
           ) : (
             <div className="flex items-center gap-2">
               <Link href="/login">
-                <Button variant="ghost">Sign In</Button>
+                <Button>Login</Button>
               </Link>
-              <Link href="/signup">
+              {/* <Link href="/signup">
                 <Button>Sign Up</Button>
-              </Link>
+              </Link> */}
             </div>
           )}
         </div>
@@ -177,7 +187,7 @@ export default function Navbar() {
               <ShoppingCart className="h-5 w-5" />
             </Button>
             {totalItems > 0 && (
-              <Badge className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-secondary p-0 text-xs text-secondary-foreground">
+              <Badge className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary p-0 text-xs text-secondary-foreground">
                 {totalItems}
               </Badge>
             )}

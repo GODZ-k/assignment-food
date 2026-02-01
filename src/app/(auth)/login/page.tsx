@@ -117,7 +117,7 @@ export default function LoginPage() {
     formData.append("password", data.password);
     emailLoginMutation.mutate(formData,{
       onSuccess:()=>{
-        router.replace('/')
+        router.replace('/menu')
       },
       onError:(error)=>{
         toast.error(error.message||"Something went wrong")
@@ -144,7 +144,7 @@ export default function LoginPage() {
     formData.append('pin',data.pin)
     verifyOtpMutation.mutate(formData,{
       onSuccess:()=>{
-        router.replace('/')
+        router.replace('/menu')
       },
       onError:(error)=>{
         toast.error(error.message||"Something went wrong")
@@ -334,6 +334,9 @@ export default function LoginPage() {
             Sign up
           </Link>
         </p>
+         <Link className=" bg-primary p-2 text-sm rounded-lg" href={"/"}>
+             Back to home
+      </Link>
       </CardFooter>
     </Card>
   );

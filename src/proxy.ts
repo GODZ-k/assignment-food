@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { verifyToken } from "./actions/auth";
 
-const protectedRoutes = ["/", "/menu", "/cart"];
+const protectedRoutes = ["/menu", "/cart"];
 const authRoutes = [
   "/login",
   "/signup",
@@ -13,6 +13,10 @@ const authRoutes = [
 export default async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
+  if(pathname === '/'){
+    return NextResponse.next()
+  }
+
   if (pathname.startsWith("/_next") || pathname.startsWith("/api")) {
     return NextResponse.next();
   }
@@ -21,10 +25,16 @@ export default async function proxy(req: NextRequest) {
   const cookieStore = await cookies();
   const token = cookieStore.get("_auth_token")?.value;
   const isAuthenticated = !!(token && (await verifyToken(token)));
+  const payload = await verifyToken(token as string) as {role:"admin"|"user"}
+
+  if(pathname.startsWith('/admin') && payload.role !== 'admin'){
+      return NextResponse.redirect(new URL("/", req.url)); // Redirect to home
+  }
 
   if (authRoutes.includes(pathname) && isAuthenticated) {
     return NextResponse.redirect(new URL("/", req.url)); // Redirect to home
   }
+
 
   const isProtectedRoute = protectedRoutes.some(
     (route) => pathname === route || pathname.startsWith(route + "/"),

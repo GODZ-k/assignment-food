@@ -3,10 +3,13 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { addToCart, updateQuantity, removeFromCart } from "@/lib/features/cartSlice";
 import type { MenuItem } from "@/lib/data/menu";
 import { Plus, Minus } from "lucide-react";
+
+type PortionSize = "quarter" | "half" | "full";
 
 interface MenuItemCardProps {
   item: MenuItem;
@@ -14,17 +17,47 @@ interface MenuItemCardProps {
 
 export default function MenuItemCard({ item }: MenuItemCardProps) {
   const dispatch = useAppDispatch();
-  const cartItem = useAppSelector((state) =>
-    state.cart.items.find((cartItem) => cartItem.id === item.id)
-  );
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [selectedPortion, setSelectedPortion] = useState<PortionSize>(() => {
+    if (item.prices.quarter) return "quarter";
+    if (item.prices.half) return "half";
+    return "full";
+  });
+
+  const getCartItemId = () => `${item.id}-${selectedPortion}`;
+
+  const cartItem = useAppSelector((state) =>
+    state.cart.items.find((cartItem) => cartItem.id === getCartItemId())
+  );
+
+  const getCurrentPrice = () => {
+    if (selectedPortion === "quarter" && item.prices.quarter) return item.prices.quarter;
+    if (selectedPortion === "half" && item.prices.half) return item.prices.half;
+    return item.prices.full;
+  };
+
+  const getPortionLabel = (portion: PortionSize) => {
+    switch (portion) {
+      case "quarter":
+        return "Quarter";
+      case "half":
+        return "Half";
+      case "full":
+        return "Full";
+    }
+  };
+
+  const availablePortions: PortionSize[] = [];
+  if (item.prices.quarter) availablePortions.push("quarter");
+  if (item.prices.half) availablePortions.push("half");
+  availablePortions.push("full");
 
   const handleAddToCart = () => {
     dispatch(
       addToCart({
-        id: item.id,
-        name: item.name,
-        price: item.price,
+        id: getCartItemId(),
+        name: `${item.name} (${getPortionLabel(selectedPortion)})`,
+        price: getCurrentPrice(),
         image: item.image,
         description: item.description,
       })
@@ -33,19 +66,21 @@ export default function MenuItemCard({ item }: MenuItemCardProps) {
 
   const handleIncrement = () => {
     if (cartItem) {
-      dispatch(updateQuantity({ id: item.id, quantity: cartItem.quantity + 1 }));
+      dispatch(updateQuantity({ id: getCartItemId(), quantity: cartItem.quantity + 1 }));
     }
   };
 
   const handleDecrement = () => {
     if (cartItem) {
       if (cartItem.quantity === 1) {
-        dispatch(removeFromCart(item.id));
+        dispatch(removeFromCart(getCartItemId()));
       } else {
-        dispatch(updateQuantity({ id: item.id, quantity: cartItem.quantity - 1 }));
+        dispatch(updateQuantity({ id: getCartItemId(), quantity: cartItem.quantity - 1 }));
       }
     }
   };
+
+  if (!item.isAvailable) return null;
 
   return (
     <Card className="group overflow-hidden border-none shadow-md transition-shadow hover:shadow-lg">
@@ -74,9 +109,29 @@ export default function MenuItemCard({ item }: MenuItemCardProps) {
             {item.description}
           </p>
         </div>
+
+        {/* Portion Size Selector */}
+        {availablePortions.length > 1 && (
+          <div className="mb-3 flex flex-wrap gap-1">
+            {availablePortions.map((portion) => (
+              <Badge
+                key={portion}
+                variant={selectedPortion === portion ? "default" : "outline"}
+                className="cursor-pointer text-xs"
+                onClick={() => setSelectedPortion(portion)}
+              >
+                {getPortionLabel(portion)}
+                {/* {portion === "quarter" && item.prices.quarter && ` $${item.prices.quarter.toFixed(2)}`}
+                {portion === "half" && item.prices.half && ` $${item.prices.half.toFixed(2)}`}
+                {portion === "full" && ` $${item.prices.full.toFixed(2)}`} */}
+              </Badge>
+            ))}
+          </div>
+        )}
+
         <div className="flex items-center justify-between">
           <span className="text-lg font-bold text-primary">
-            ${item.price.toFixed(2)}
+            ${getCurrentPrice().toFixed(2)}
           </span>
           {cartItem ? (
             <div className="flex items-center gap-2">
